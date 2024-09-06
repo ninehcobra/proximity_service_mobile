@@ -7,7 +7,7 @@ class AppRouter {
     switch (settings.name) {
       case RouteConstants.home:
         return MaterialPageRoute(
-            builder: (_) => const PopScope(
+            builder: (_) => PopScope(
                   canPop: false,
                   child: MapPage(),
                 ));

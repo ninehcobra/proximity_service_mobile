@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
+import 'package:flutter_svg/svg.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:proximity_service/common_libs.dart';
@@ -22,13 +23,15 @@ class _MapPageState extends State<MapPage> {
 
   final List<Marker> _markers = [];
 
+  final List<Marker> _entityMarkers = [];
+
   LatLng? _selectedPosition;
 
   LatLng? _mylocation;
 
   LatLng? _draggedPosition;
 
-  final bool _isDragging = false;
+  bool _isDragging = false;
 
   final TextEditingController _searchController = TextEditingController();
 
@@ -65,12 +68,22 @@ class _MapPageState extends State<MapPage> {
 
 // show current location
   void _showCurrentLocation() async {
-    try {
-      Position position = await _determinePosition();
-      LatLng currentLocation = LatLng(position.latitude, position.longitude);
-      _mapController.move(currentLocation, 15.0);
-    } catch (e) {
-      print(e);
+    if (_mylocation != null) {
+      setState(() {
+        _mylocation = null;
+      });
+    } else {
+      try {
+        Position position = await _determinePosition();
+        LatLng currentLocation = LatLng(position.latitude, position.longitude);
+
+        _mapController.move(currentLocation, 15.0);
+        setState(() {
+          _mylocation = currentLocation;
+        });
+      } catch (e) {
+        print(e);
+      }
     }
   }
 
@@ -212,6 +225,131 @@ class _MapPageState extends State<MapPage> {
     });
   }
 
+  void _showEntityDetails(Map<String, dynamic> entity) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (BuildContext context) {
+        return Container(
+          height: MediaQuery.of(context).size.height * 0.8,
+          child: Column(
+            children: [
+              Container(
+                height: 200,
+                decoration: BoxDecoration(
+                  image: DecorationImage(
+                    image: NetworkImage(entity['images'][0]['url']),
+                    fit: BoxFit.cover,
+                  ),
+                  borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+                ),
+              ),
+              Expanded(
+                child: SingleChildScrollView(
+                  child: Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(entity['name'],
+                            style: TextStyle(
+                                fontSize: 24, fontWeight: FontWeight.bold)),
+                        SizedBox(height: 8),
+                        Row(
+                          children: [
+                            Icon(Icons.star, color: Colors.amber),
+                            Text(
+                                ' ${entity['overallRating']} (${entity['totalReview']} reviews)'),
+                          ],
+                        ),
+                        SizedBox(height: 16),
+                        Text(entity['description']),
+                        SizedBox(height: 16),
+                        ListTile(
+                          leading: Icon(Icons.phone),
+                          title: Text(entity['phoneNumber']),
+                        ),
+                        ListTile(
+                          leading: Icon(Icons.language),
+                          title: Text(entity['website']),
+                        ),
+                        ListTile(
+                          leading: Icon(Icons.location_on),
+                          title: Text(entity['fullAddress']),
+                        ),
+                        SizedBox(height: 16),
+                        Text('Services:',
+                            style: TextStyle(
+                                fontSize: 18, fontWeight: FontWeight.bold)),
+                        Column(
+                          children: (entity['services'] as List)
+                              .map((service) => ListTile(
+                                    leading: Icon(Icons.check_circle_outline),
+                                    title: Text(service['name']),
+                                  ))
+                              .toList(),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  // search
+  void _searchEntities() async {
+    final baseUrl =
+        'http://10.0.2.2:3333/find-nearby?offset=1&limit=500&q=Nh%C3%A0%20h%C3%A0ng%20g%E1%BA%A7n%20%C4%91%C3%A2y&latitude=${_draggedPosition?.latitude.toString()}&longitude=${_draggedPosition?.longitude.toString()}&radius=10&isHighRating=false&openTime=08%3A00';
+
+    final uri = Uri.parse(baseUrl);
+
+    try {
+      final response = await http.get(uri);
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        setState(() {
+          _entityMarkers.clear(); // Clear existing markers
+          for (var entity in data["data"]) {
+            _entityMarkers.add(
+              Marker(
+                point: LatLng(entity['location']['coordinates'][1],
+                    entity['location']['coordinates'][0]),
+                width: 80,
+                height: 80,
+                child: GestureDetector(
+                  onTap: () => _showEntityDetails(entity),
+                  child: Column(
+                    children: [
+                      SvgPicture.network(
+                        entity["category"]["linkURL"],
+                        width: 40,
+                        height: 40,
+                      )
+                    ],
+                  ),
+                ),
+              ),
+            );
+            print(entity["category"]["linkURL"]);
+            print("entityMarkers: ${_entityMarkers.length}");
+          }
+        });
+      } else {
+        print('Failed to load entities: ${response.statusCode}');
+      }
+    } catch (e) {
+      print('Error fetching entities: $e');
+    }
+  }
+
   @override
   void initState() {
     super.initState();
@@ -233,13 +371,20 @@ class _MapPageState extends State<MapPage> {
               initialZoom: 13.0,
               onTap: (tapPosition, latLng) {
                 _selectedPosition = latLng;
-                _draggedPosition = _selectedPosition;
-              }),
+                print("hi");
+                setState(() {
+                  _draggedPosition = _selectedPosition;
+                  _isDragging = true;
+                });
+              },
+              interactionOptions: const InteractionOptions(
+                  flags: InteractiveFlag.all, scrollWheelVelocity: 0.005)),
           children: [
             TileLayer(
               urlTemplate: "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
             ),
             MarkerLayer(markers: _markers),
+            MarkerLayer(markers: _entityMarkers),
             if (_isDragging && _draggedPosition != null)
               MarkerLayer(markers: [
                 Marker(
@@ -324,7 +469,99 @@ class _MapPageState extends State<MapPage> {
                 )
             ],
           ),
-        )
+        ),
+        _isDragging == false
+            ? Positioned(
+                bottom: 20,
+                left: 20,
+                child: Column(
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 20),
+                      child: FloatingActionButton(
+                        onPressed: () {
+                          _searchEntities();
+                        },
+                        backgroundColor: Colors.white,
+                        foregroundColor: Colors.indigo,
+                        child: const Icon(Icons.search),
+                      ),
+                    ),
+                    FloatingActionButton(
+                      onPressed: () {
+                        setState(() {
+                          _isDragging = true;
+                        });
+                      },
+                      backgroundColor: Colors.indigo,
+                      foregroundColor: Colors.white,
+                      child: const Icon(Icons.add_location),
+                    ),
+                  ],
+                ))
+            : Positioned(
+                bottom: 20,
+                left: 20,
+                child: Column(
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 20),
+                      child: FloatingActionButton(
+                        onPressed: () {
+                          _searchEntities();
+                        },
+                        backgroundColor: Colors.white,
+                        foregroundColor: Colors.indigo,
+                        child: const Icon(Icons.search),
+                      ),
+                    ),
+                    FloatingActionButton(
+                      onPressed: () {
+                        setState(() {
+                          _isDragging = false;
+                        });
+                      },
+                      backgroundColor: Colors.redAccent,
+                      foregroundColor: Colors.white,
+                      child: const Icon(Icons.wrong_location),
+                    ),
+                  ],
+                ),
+              ),
+        Positioned(
+          bottom: 20,
+          right: 20,
+          child: Column(
+            children: [
+              FloatingActionButton(
+                onPressed: () {
+                  _showCurrentLocation();
+                },
+                backgroundColor: Colors.white,
+                foregroundColor: Colors.indigo,
+                child: const Icon(Icons.location_searching_rounded),
+              ),
+              if (_isDragging)
+                Padding(
+                  padding: const EdgeInsets.only(top: 20),
+                  child: FloatingActionButton(
+                    onPressed: () {
+                      if (_draggedPosition != null) {
+                        _showMarkerDialog(context, _draggedPosition!);
+                      }
+                      setState(() {
+                        _isDragging = false;
+                        _draggedPosition = null;
+                      });
+                    },
+                    backgroundColor: Colors.green,
+                    foregroundColor: Colors.white,
+                    child: const Icon(Icons.check),
+                  ),
+                ),
+            ],
+          ),
+        ),
       ],
     ));
   }

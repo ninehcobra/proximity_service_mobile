@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
@@ -24,6 +25,10 @@ class _MapPageState extends State<MapPage> {
   final List<Marker> _markers = [];
 
   final List<Marker> _entityMarkers = [];
+
+  bool _showCircle = false;
+
+  double _currentZoom = 13.0;
 
   LatLng? _selectedPosition;
 
@@ -307,9 +312,13 @@ class _MapPageState extends State<MapPage> {
   // search
   void _searchEntities() async {
     final baseUrl =
-        'http://10.0.2.2:3333/find-nearby?offset=1&limit=500&q=Nh%C3%A0%20h%C3%A0ng%20g%E1%BA%A7n%20%C4%91%C3%A2y&latitude=${_draggedPosition?.latitude.toString()}&longitude=${_draggedPosition?.longitude.toString()}&radius=10&isHighRating=false&openTime=08%3A00';
+        'http://10.0.2.2:3333/find-nearby?offset=1&limit=500&q=Nh%C3%A0%20h%C3%A0ng%20g%E1%BA%A7n%20%C4%91%C3%A2y&latitude=${_draggedPosition?.latitude.toString()}&longitude=${_draggedPosition?.longitude.toString()}&radius=5&isHighRating=false&openTime=08%3A00';
 
     final uri = Uri.parse(baseUrl);
+
+    setState(() {
+      _showCircle = true;
+    });
 
     try {
       final response = await http.get(uri);
@@ -367,24 +376,46 @@ class _MapPageState extends State<MapPage> {
         FlutterMap(
           mapController: _mapController,
           options: MapOptions(
+              onMapEvent: (MapEvent event) {
+                if (event is MapEventMove) {
+                  setState(() {
+                    _currentZoom = event.camera.zoom;
+                  });
+                }
+              },
               initialCenter: const LatLng(51.5, -0.09),
               initialZoom: 13.0,
               onTap: (tapPosition, latLng) {
                 _selectedPosition = latLng;
-                print("hi");
+
                 setState(() {
                   _draggedPosition = _selectedPosition;
                   _isDragging = true;
+                  _showCircle = false;
                 });
               },
-              interactionOptions: const InteractionOptions(
-                  flags: InteractiveFlag.all, scrollWheelVelocity: 0.005)),
+              interactionOptions: InteractionOptions(
+                flags: InteractiveFlag.all & ~InteractiveFlag.rotate,
+                scrollWheelVelocity: 0.005,
+              )),
           children: [
             TileLayer(
               urlTemplate: "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
             ),
             MarkerLayer(markers: _markers),
             MarkerLayer(markers: _entityMarkers),
+            if (_draggedPosition != null && _showCircle)
+              CircleLayer(
+                circles: [
+                  CircleMarker(
+                    point: _draggedPosition!,
+                    radius: 500 * pow(2, (_currentZoom - 13)).toDouble(),
+                    color: Colors.blue.withOpacity(0.2),
+                    borderColor: Colors.blue,
+                    borderStrokeWidth: 2,
+                  ),
+                ],
+              ),
             if (_isDragging && _draggedPosition != null)
               MarkerLayer(markers: [
                 Marker(
@@ -519,6 +550,7 @@ class _MapPageState extends State<MapPage> {
                       onPressed: () {
                         setState(() {
                           _isDragging = false;
+                          _entityMarkers.clear();
                         });
                       },
                       backgroundColor: Colors.redAccent,

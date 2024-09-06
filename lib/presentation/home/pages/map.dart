@@ -9,7 +9,7 @@ import 'package:proximity_service/presentation/home/widgets/marker_data.dart';
 import 'package:http/http.dart' as http;
 
 class MapPage extends StatefulWidget {
-  MapPage({super.key});
+  const MapPage({super.key});
 
   @override
   State<MapPage> createState() => _MapPageState();
@@ -18,9 +18,9 @@ class MapPage extends StatefulWidget {
 class _MapPageState extends State<MapPage> {
   final MapController _mapController = MapController();
 
-  List<MarkerData> _markersData = [];
+  final List<MarkerData> _markersData = [];
 
-  List<Marker> _markers = [];
+  final List<Marker> _markers = [];
 
   LatLng? _selectedPosition;
 
@@ -28,9 +28,9 @@ class _MapPageState extends State<MapPage> {
 
   LatLng? _draggedPosition;
 
-  bool _isDragging = false;
+  final bool _isDragging = false;
 
-  TextEditingController _searchController = TextEditingController();
+  final TextEditingController _searchController = TextEditingController();
 
   List<dynamic> _searchResults = [];
 
@@ -125,19 +125,19 @@ class _MapPageState extends State<MapPage> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text('Add Marker'),
+        title: const Text('Add Marker'),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             TextField(
               controller: titleController,
-              decoration: InputDecoration(
+              decoration: const InputDecoration(
                 labelText: "Title",
               ),
             ),
             TextField(
               controller: descriptionController,
-              decoration: InputDecoration(
+              decoration: const InputDecoration(
                 labelText: "Description",
               ),
             )
@@ -148,13 +148,13 @@ class _MapPageState extends State<MapPage> {
               onPressed: () {
                 Navigator.pop(context);
               },
-              child: Text('Cancel')),
+              child: const Text('Cancel')),
           TextButton(
               onPressed: () {
                 _addMarker(
                     position, titleController.text, descriptionController.text);
               },
-              child: Text('Add'))
+              child: const Text('Add'))
         ],
       ),
     );
@@ -172,7 +172,7 @@ class _MapPageState extends State<MapPage> {
                     onPressed: () {
                       Navigator.pop(context);
                     },
-                    child: Text('Close'))
+                    child: const Text('Close'))
               ],
             ));
   }
@@ -229,7 +229,7 @@ class _MapPageState extends State<MapPage> {
         FlutterMap(
           mapController: _mapController,
           options: MapOptions(
-              initialCenter: LatLng(51.5, -0.09),
+              initialCenter: const LatLng(51.5, -0.09),
               initialZoom: 13.0,
               onTap: (tapPosition, latLng) {
                 _selectedPosition = latLng;
@@ -246,7 +246,7 @@ class _MapPageState extends State<MapPage> {
                     point: _draggedPosition!,
                     width: 80,
                     height: 80,
-                    child: Icon(
+                    child: const Icon(
                       Icons.location_on,
                       color: Colors.indigo,
                       size: 40,
@@ -258,7 +258,7 @@ class _MapPageState extends State<MapPage> {
                     point: _mylocation!,
                     width: 80,
                     height: 80,
-                    child: Icon(
+                    child: const Icon(
                       Icons.location_on,
                       color: Colors.green,
                       size: 40,
@@ -314,7 +314,9 @@ class _MapPageState extends State<MapPage> {
                       return ListTile(
                         title: Text(place['display_name']),
                         onTap: () {
-                          _moveToLocation(place['lat'], place['lon']);
+                          double lat = double.parse(place['lat']);
+                          double lon = double.parse(place['lon']);
+                          _moveToLocation(lat, lon);
                         },
                       );
                     },

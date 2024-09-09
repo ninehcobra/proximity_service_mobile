@@ -1,4 +1,4 @@
-import 'package:proximity_service/common/constants/routes.dart';
+import 'package:proximity_service/core/constants/routes.dart';
 import 'package:proximity_service/common_libs.dart';
 import 'package:proximity_service/presentation/home/pages/map.dart';
 

@@ -2,8 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:proximity_service/core/constants/routes.dart';
 import 'package:proximity_service/config/routes/app_router.dart';
 import 'package:proximity_service/config/theme/theme.dart';
+import 'package:proximity_service/injection_container.dart';
 
-void main() {
+void main() async {
+// Initialize dependencies
+  await initializeDependencies();
   runApp(const MyApp());
 }
 

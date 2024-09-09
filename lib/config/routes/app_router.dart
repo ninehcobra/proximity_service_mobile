@@ -1,6 +1,6 @@
 import 'package:proximity_service/core/constants/routes.dart';
 import 'package:proximity_service/common_libs.dart';
-import 'package:proximity_service/presentation/home/pages/map.dart';
+import 'package:proximity_service/features/near_by/presentation/pages/map_view.dart';
 
 class AppRouter {
   static Route<dynamic> generateRoute(RouteSettings settings) {
@@ -9,7 +9,7 @@ class AppRouter {
         return MaterialPageRoute(
             builder: (_) => const PopScope(
                   canPop: false,
-                  child: MapPage(),
+                  child: MapView(),
                 ));
 
       default:

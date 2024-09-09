@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:math';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_svg/svg.dart';
@@ -234,11 +235,11 @@ class _MapPageState extends State<MapPage> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      shape: RoundedRectangleBorder(
+      shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       builder: (BuildContext context) {
-        return Container(
+        return SizedBox(
           height: MediaQuery.of(context).size.height * 0.8,
           child: Column(
             children: [
@@ -246,10 +247,14 @@ class _MapPageState extends State<MapPage> {
                 height: 200,
                 decoration: BoxDecoration(
                   image: DecorationImage(
-                    image: NetworkImage(entity['images'][0]['url']),
+                    image: NetworkImage(
+                      entity['images'][0]['url'],
+                    ),
                     fit: BoxFit.cover,
+                    onError: (_, __) => const Icon(Icons.error),
                   ),
-                  borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+                  borderRadius:
+                      const BorderRadius.vertical(top: Radius.circular(20)),
                 ),
               ),
               Expanded(
@@ -260,39 +265,40 @@ class _MapPageState extends State<MapPage> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(entity['name'],
-                            style: TextStyle(
+                            style: const TextStyle(
                                 fontSize: 24, fontWeight: FontWeight.bold)),
-                        SizedBox(height: 8),
+                        const SizedBox(height: 8),
                         Row(
                           children: [
-                            Icon(Icons.star, color: Colors.amber),
+                            const Icon(Icons.star, color: Colors.amber),
                             Text(
                                 ' ${entity['overallRating']} (${entity['totalReview']} reviews)'),
                           ],
                         ),
-                        SizedBox(height: 16),
+                        const SizedBox(height: 16),
                         Text(entity['description']),
-                        SizedBox(height: 16),
+                        const SizedBox(height: 16),
                         ListTile(
-                          leading: Icon(Icons.phone),
+                          leading: const Icon(Icons.phone),
                           title: Text(entity['phoneNumber']),
                         ),
                         ListTile(
-                          leading: Icon(Icons.language),
+                          leading: const Icon(Icons.language),
                           title: Text(entity['website']),
                         ),
                         ListTile(
-                          leading: Icon(Icons.location_on),
+                          leading: const Icon(Icons.location_on),
                           title: Text(entity['fullAddress']),
                         ),
-                        SizedBox(height: 16),
-                        Text('Services:',
+                        const SizedBox(height: 16),
+                        const Text('Services:',
                             style: TextStyle(
                                 fontSize: 18, fontWeight: FontWeight.bold)),
                         Column(
                           children: (entity['services'] as List)
                               .map((service) => ListTile(
-                                    leading: Icon(Icons.check_circle_outline),
+                                    leading:
+                                        const Icon(Icons.check_circle_outline),
                                     title: Text(service['name']),
                                   ))
                               .toList(),
@@ -312,7 +318,7 @@ class _MapPageState extends State<MapPage> {
   // search
   void _searchEntities() async {
     final baseUrl =
-        'http://10.0.2.2:3333/find-nearby?offset=1&limit=500&q=Nh%C3%A0%20h%C3%A0ng%20g%E1%BA%A7n%20%C4%91%C3%A2y&latitude=${_draggedPosition?.latitude.toString()}&longitude=${_draggedPosition?.longitude.toString()}&radius=5&isHighRating=false&openTime=08%3A00';
+        'http://localhost:3333/find-nearby?offset=1&limit=500&q=Nh%C3%A0%20h%C3%A0ng%20g%E1%BA%A7n%20%C4%91%C3%A2y&latitude=${_draggedPosition?.latitude.toString()}&longitude=${_draggedPosition?.longitude.toString()}&radius=5&isHighRating=false&openTime=08%3A00';
 
     final uri = Uri.parse(baseUrl);
 
@@ -347,15 +353,17 @@ class _MapPageState extends State<MapPage> {
                 ),
               ),
             );
-            print(entity["category"]["linkURL"]);
-            print("entityMarkers: ${_entityMarkers.length}");
           }
         });
       } else {
-        print('Failed to load entities: ${response.statusCode}');
+        if (kDebugMode) {
+          print('Failed to load entities: ${response.statusCode}');
+        }
       }
     } catch (e) {
-      print('Error fetching entities: $e');
+      if (kDebugMode) {
+        print('Error fetching entities: $e');
+      }
     }
   }
 
@@ -394,10 +402,12 @@ class _MapPageState extends State<MapPage> {
                   _showCircle = false;
                 });
               },
-              interactionOptions: InteractionOptions(
-                flags: InteractiveFlag.all & ~InteractiveFlag.rotate,
-                scrollWheelVelocity: 0.005,
-              )),
+              interactionOptions: const InteractionOptions(
+                  flags: InteractiveFlag.all & ~InteractiveFlag.rotate,
+                  scrollWheelVelocity: 0.005,
+                  cursorKeyboardRotationOptions:
+                      CursorKeyboardRotationOptions(),
+                  debugMultiFingerGestureWinner: true)),
           children: [
             TileLayer(
               urlTemplate: "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
@@ -473,7 +483,9 @@ class _MapPageState extends State<MapPage> {
                           : null),
                   onTap: () {
                     setState(() {
-                      print("tap");
+                      if (kDebugMode) {
+                        print("tap");
+                      }
                       _isSearching = true;
                     });
                   },

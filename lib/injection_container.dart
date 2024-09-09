@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import 'package:get_it/get_it.dart';
 import 'package:proximity_service/features/near_by/data/data_sources/remote/near_by_api_service.dart';
 import 'package:dio/dio.dart';
@@ -10,9 +9,9 @@ import 'package:proximity_service/features/near_by/presentation/bloc/place/remot
 final sl = GetIt.instance;
 
 Future<void> initializeDependencies() async {
-  if (kDebugMode) {
-    print("initializing dependencies");
-  }
+  print("initializing dependencies that ne");
+
+  print("initializing dependencies that ne");
   // Dio
   sl.registerSingleton<Dio>(Dio());
 
@@ -25,5 +24,7 @@ Future<void> initializeDependencies() async {
   sl.registerSingleton<FindNearbyUseCase>(FindNearbyUseCase(sl()));
 
   // Blocs
-  sl.registerFactory(() => RemotePlaceBloc(sl()));
+  sl.registerFactory<RemotePlaceBloc>(() => RemotePlaceBloc(sl()));
+
+  // sl.registerSingleton(() => LocalCurrentPositionBloc(sl()));
 }

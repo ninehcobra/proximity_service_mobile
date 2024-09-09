@@ -5,13 +5,13 @@ import 'package:proximity_service/features/near_by/presentation/bloc/place/remot
 import 'package:proximity_service/features/near_by/presentation/bloc/place/remote/remote_place_state.dart';
 
 class RemotePlaceBloc extends Bloc<RemotePlaceEvent, RemotePlaceState> {
-  // ignore: unused_field
   final FindNearbyUseCase _findNearbyUseCase;
   RemotePlaceBloc(this._findNearbyUseCase) : super(RemotePlaceLoading()) {
     on<GetPlaces>(onGetPlaces);
   }
 
   void onGetPlaces(GetPlaces event, Emitter<RemotePlaceState> emit) async {
+    print('hi');
     final dataState = await _findNearbyUseCase(event);
 
     if (dataState is DataSuccess && dataState.data != null) {

@@ -1,3 +1,4 @@
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:proximity_service/common_libs.dart';
@@ -28,7 +29,14 @@ class _MapViewState extends State<MapView> {
             children: [
               TileLayer(
                 urlTemplate: CommonConstants.openStreetMapUrl,
-              )
+              ),
+              // BlocBuilder<LocalCurrentPositionBloc, LocalCurrentPositionState>(
+              //     builder: (_, state) {
+              //   if (state is LocalCurrentPositionLoading) {
+              //     return const Center(child: CircularProgressIndicator());
+              //   }
+              //   return const SizedBox();
+              // })
             ],
           )
         ],

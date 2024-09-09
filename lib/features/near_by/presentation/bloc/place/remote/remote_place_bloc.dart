@@ -7,11 +7,14 @@ import 'package:proximity_service/features/near_by/presentation/bloc/place/remot
 class RemotePlaceBloc extends Bloc<RemotePlaceEvent, RemotePlaceState> {
   final FindNearbyUseCase _findNearbyUseCase;
   RemotePlaceBloc(this._findNearbyUseCase) : super(RemotePlaceLoading()) {
-    on<GetPlaces>(onGetPlaces);
+    on<GetPlaces>((event, emit) async {
+      print('GetPlaces event received');
+      onGetPlaces(event, emit);
+    });
   }
 
   void onGetPlaces(GetPlaces event, Emitter<RemotePlaceState> emit) async {
-    print('hi');
+    print('hi 1231231312312312');
     final dataState = await _findNearbyUseCase(event);
 
     if (dataState is DataSuccess && dataState.data != null) {

@@ -1,7 +1,6 @@
 import 'dart:io';
 
 import 'package:geolocator/geolocator.dart';
-import 'package:geolocator_platform_interface/src/models/position.dart';
 import 'package:proximity_service/core/resources/data_state.dart';
 import 'package:proximity_service/features/near_by/data/data_sources/remote/near_by_api_service.dart';
 import 'package:proximity_service/features/near_by/data/models/place.dart';

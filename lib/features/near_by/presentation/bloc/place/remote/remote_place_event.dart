@@ -1,3 +1,4 @@
+
 abstract class RemotePlaceEvent {
   const RemotePlaceEvent();
 }
